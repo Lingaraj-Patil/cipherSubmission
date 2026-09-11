@@ -1,0 +1,23 @@
+[
+  {
+    "id": "26f0712d-b84f-4c7e-842c-279ebc98d616",
+    "idempotencyKey": "06dffa93-efe3-4ef9-b1c1-e94c8a4927de",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "b",
+      "assumptions": "b",
+      "classes": "b",
+      "relationships": "b",
+      "behavior": "n",
+      "tradeoffs": "n"
+    },
+    "createdAt": "2026-09-11T18:02:05.737Z",
+    "status": "FAILED",
+    "evaluation": {
+      "type": "llm-rubric-v1",
+      "error": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}",
+      "retryable": true
+    }
+  }
+]
