@@ -2,6 +2,12 @@
 
 A focused, end-to-end prototype for practicing Low-Level Design (LLD), submitting a structured design, receiving explainable rubric-based feedback, and reviewing attempt history.
 
+## Screenshot
+
+<img width="1600" height="989" alt="WhatsApp Image 2026-09-11 at 23 58 05" src="https://github.com/user-attachments/assets/89e94538-38ae-46a5-b4ad-96a8c12a9f93" />
+
+
+
 ## Why this MVP
 
 The assignment asks for a learner journey of:
