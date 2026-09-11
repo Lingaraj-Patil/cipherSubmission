@@ -19,5 +19,635 @@
       "error": "{\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}",
       "retryable": true
     }
+  },
+  {
+    "id": "3ccf28aa-08e1-4156-a395-cc334b996ea2",
+    "idempotencyKey": "07486aad-e9d9-4d00-8780-7952a57ad14a",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:09:37.526Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 38,
+      "maxScore": 40,
+      "percentage": 95,
+      "summary": "The learner has provided a well-structured and comprehensive low-level design for the parking lot problem. All requirements are addressed, and the design demonstrates a strong understanding of object-oriented principles and design patterns, particularly the Strategy Pattern for fee calculation. The explanation is clear, and edge cases and testability are well considered. There is a minor ambiguity in the representation of vehicle types, but it does not significantly detract from the overall quality.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The learner accurately lists all explicit requirements from the problem statement and adds reasonable assumptions (e.g., one vehicle one ticket, payment out of scope), demonstrating a thorough understanding of the problem.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 4,
+          "evidence": "Classes like `ParkingSpot`, `ParkingFloor`, `ParkingLot`, `Ticket`, and `FeeCalculator` have well-defined and cohesive responsibilities. For example, `ParkingSpot` manages its own state and compatibility, `ParkingFloor` manages its spots, and `ParkingLot` orchestrates the overall process.",
+          "concern": "The design includes both a `VehicleType` enum and concrete `Motorcycle`, `Car`, `Truck` classes that inherit from `Vehicle`. This dual representation of vehicle types might be slightly redundant or indicate a minor ambiguity in how vehicle types are distinguished and used, especially if the subclasses don't add distinct behaviors.",
+          "suggestion": "Clarify the role of the `VehicleType` enum versus the `Motorcycle`, `Car`, `Truck` classes. If the subclasses primarily serve as type markers, consider if the enum alone, or an abstract `getVehicleType()` method in `Vehicle` implemented by subclasses, would be a cleaner approach.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 5,
+          "evidence": "The design exhibits low coupling and high cohesion. `ParkingLot` interacts with `FeeCalculator` via an interface, not concrete implementations. `ParkingSpot` methods are highly cohesive, managing a single spot's state. `ParkingFloor` manages its spots, and `ParkingLot` orchestrates the overall parking operations, showing good separation of concerns.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 5,
+          "evidence": "The `FeeCalculator` is explicitly defined as an interface, which is excellent for meeting extensibility requirements. Classes like `ParkingSpot` and `Ticket` encapsulate their internal state (e.g., `current vehicle`, `closed status`) and provide controlled access through well-defined methods (`park`, `free`, `close`).",
+          "concern": "While implied by the method definitions, the submission does not explicitly show access modifiers (e.g., public/private) for class members, which are crucial for enforcing encapsulation in practice.",
+          "suggestion": "In a more detailed design, explicitly mention or illustrate the use of access modifiers to clearly define the public interface and hide internal implementation details.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 4,
+          "evidence": "The learner correctly identifies and applies the Strategy Pattern for fee calculation, which directly addresses the requirements for replaceable and extensible fee policies. `FeeCalculator` serves as an effective abstraction for different pricing strategies.",
+          "concern": "The abstraction for `Vehicle` and its subclasses, as noted in 'Class responsibilities', could be slightly refined to avoid potential redundancy between the `vehicleType` attribute and the concrete subclass types.",
+          "suggestion": "Refine the `Vehicle` hierarchy to ensure a clear and non-redundant abstraction. For instance, if subclasses primarily define the type, the `vehicleType` attribute in the base class might be removed, and `ParkingSpot.canFit()` could rely on polymorphism or an abstract `getVehicleType()` method.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design explicitly supports easy addition of new fee policies through the Strategy Pattern, adhering to the Open/Closed Principle. Adding new parking floors is also straightforward. The `ParkingSpot`'s `supported vehicle types` list allows for flexible configuration of spot compatibility.",
+          "concern": "None significant. The design is robust for the stated extensibility requirements.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 5,
+          "evidence": "The learner identifies 6 relevant edge cases (e.g., parking lot full, ticket already closed, vehicle already parked) and proposes appropriate handling. The testability section clearly outlines how individual classes can be unit tested and highlights the benefit of using a 'fake FeeCalculator' for `ParkingLot` testing, demonstrating a good understanding of test-driven design principles.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally well-organized with clear headings, logical flow, and concise explanations. Text-based diagrams effectively illustrate relationships and patterns. The rationale behind design choices (e.g., 'Why use it?' for Strategy Pattern) and the discussion of trade-offs and design principles (Open/Closed Principle) are excellent.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "b428f893-02bd-4bd6-b764-8e07d1b045d3",
+    "idempotencyKey": "efaaeec1-f3ca-49fa-a889-4297b1c378d7",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:11:26.431Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 35,
+      "maxScore": 40,
+      "percentage": 88,
+      "summary": "The learner has provided a well-structured and comprehensive low-level design for the Parking Lot problem. All core requirements are addressed, and the design demonstrates a good understanding of object-oriented principles, particularly the Strategy Pattern for fee calculation, which directly addresses extensibility requirements. The explanation is clear and concise, making the design easy to follow. Key strengths include clear class responsibilities, good separation of concerns for fee calculation, and a thoughtful approach to extensibility. The main area for improvement is ensuring that all identified edge cases are explicitly handled in the behavior flow, specifically preventing a vehicle from having multiple active tickets.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The learner explicitly lists all requirements from the problem statement and adds relevant, reasonable assumptions (e.g., one vehicle can have only one active ticket, payment processing is out of scope). The design clearly addresses all stated requirements.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 4,
+          "evidence": "Class responsibilities are generally well-defined: `ParkingLot` orchestrates entry/exit, `ParkingFloor` finds spots, `ParkingSpot` manages its state, `Ticket` tracks parking details, and `FeeCalculator` calculates fees. The `ParkingSpot` methods (`isAvailable()`, `canFit()`, `park()`, `free()`) are appropriately placed.",
+          "concern": "The `ParkingLot`'s `parkVehicle` method is responsible for finding a spot, parking, and creating a ticket. While `ParkingFloor` has `findAvailableSpot`, the overall orchestration for parking (including ticket creation and vehicle state management) is centralized in `ParkingLot`. This could potentially lead to `ParkingLot` becoming a 'god object' if more complex parking logic were introduced.",
+          "suggestion": "Consider if `ParkingLot` should delegate more of the 'parking' action to `ParkingFloor` or if a dedicated `ParkingService` could handle the orchestration of `Ticket` creation and `ParkingSpot` updates, leaving `ParkingLot` primarily as a container of floors and a facade for the system.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 4,
+          "evidence": "The design exhibits good cohesion within classes (e.g., `ParkingSpot` manages its own state and availability). Coupling between `ParkingLot` and `FeeCalculator` is low due to the Strategy Pattern, allowing independent evolution. `ParkingLot` interacts with `ParkingFloor` and `Ticket` as expected.",
+          "concern": "The `ParkingLot` directly iterates through `ParkingFloor`s to find a spot, as indicated by 'ParkingLot searches floors' in the behavior flow. This creates a direct dependency on the internal structure of `ParkingLot` (list of floors) and how `ParkingFloor` finds spots, which could be slightly more decoupled.",
+          "suggestion": "For future extensibility, if spot-finding logic becomes complex or needs to be pluggable, consider introducing a `SpotFindingStrategy` or `ParkingStrategy` to abstract how spots are found across floors, further reducing coupling.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 4,
+          "evidence": "The `FeeCalculator` is clearly defined as an interface with concrete implementations, demonstrating good use of polymorphism and encapsulation of fee logic. `ParkingSpot` methods (`isAvailable`, `canFit`, `park`, `free`) effectively encapsulate its internal state. `Ticket` has a `close()` method to manage its status.",
+          "concern": "While methods are provided, the properties like `ParkingSpot.supported vehicle types` and `ParkingSpot.current vehicle` are listed without explicit access modifiers. It's crucial that these are private and only manipulated through the provided methods (`park`, `free`, `canFit`) to maintain strong encapsulation.",
+          "suggestion": "Explicitly state that internal state variables like `supported vehicle types` and `current vehicle` in `ParkingSpot` should be private and only accessed/modified via public methods to ensure proper encapsulation.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 5,
+          "evidence": "The learner correctly identifies and applies the Strategy Pattern for `FeeCalculator`, which directly addresses the requirements for replaceable and extensible fee calculation. The use of a `VehicleType` enum and potential subclasses for `Vehicle` also represents appropriate abstraction.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design explicitly uses the Strategy Pattern for `FeeCalculator`, making it very easy to add new fee policies without modifying existing parking logic, as demonstrated with `HolidayFeeCalculator`. The `Vehicle` hierarchy and `ParkingSpot`'s `supported vehicle types` property also allow for easy addition of new vehicle types.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 3,
+          "evidence": "Several important edge cases are identified (full lot, wrong vehicle type, occupied spot, closed ticket, no compatible spot). The testability section correctly identifies that classes can be tested independently and mentions using a fake `FeeCalculator` for `ParkingLot` testing.",
+          "concern": "The learner identifies the edge case 'Vehicle is already parked. Do not allow the same vehicle to have multiple active tickets' but the provided `ENTRY LOGIC` does not include a step to check for this. The `ParkingLot.parkVehicle` method would need to query for existing active tickets for the vehicle before creating a new one.",
+          "suggestion": "Update the `ENTRY LOGIC` to include a step to check if the incoming vehicle already has an active ticket. If so, the parking request should be rejected. This would likely involve `ParkingLot` maintaining a map of active tickets or querying a `TicketRepository` to ensure this constraint is enforced.",
+          "confidence": 0.8
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally well-structured with clear, distinct sections (Requirements, Domain Classes, Relationships, Behaviour, Edge Cases, Trade-offs). The explanations are concise, easy to understand, and directly address the problem. The use of diagrams and bullet points enhances clarity, and the explanation of the Strategy Pattern, its benefits, and trade-offs is excellent.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "e6fef719-2010-492e-b7e1-a67358b6a20d",
+    "idempotencyKey": "09fa0ab3-d64e-4028-a2d1-d3fa1b2d648a",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:12:11.090Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 40,
+      "maxScore": 40,
+      "percentage": 100,
+      "summary": "The learner has provided an excellent low-level design for the parking lot problem. All requirements are thoroughly understood and addressed. The class design demonstrates strong adherence to principles like Single Responsibility, with clear and cohesive responsibilities assigned to each class. Coupling is kept low, particularly through the effective use of the Strategy Pattern for fee calculation, which also ensures high extensibility. Encapsulation is well-applied, and interfaces are used appropriately. The design explicitly identifies and correctly applies the Strategy Pattern, fulfilling the extensibility requirements for fee policies. Edge cases are comprehensively considered, and the design's testability is well-articulated. The overall explanation is exceptionally clear, well-structured, and detailed, making the design easy to understand and evaluate.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The learner's 'Requirements & Assumptions' section accurately captures all explicit requirements from the problem statement and adds relevant, sensible assumptions (e.g., 'One vehicle can have only one active ticket', 'Payment processing is outside the scope').",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 5,
+          "evidence": "Classes like `ParkingSpot`, `ParkingFloor`, `ParkingLot`, `Ticket`, and `FeeCalculator` each have clearly defined, cohesive responsibilities. For instance, `ParkingSpot` manages its own availability and vehicle compatibility, `ParkingFloor` aggregates spots and finds available ones, and `ParkingLot` orchestrates the overall parking process. The `FeeCalculator` interface clearly defines the responsibility for fee calculation.",
+          "concern": "The design includes both a `VehicleType` enum and concrete `Motorcycle`, `Car`, `Truck` classes. While not incorrect, the specific behavioral differences that necessitate the subclasses are not explicitly detailed in the LLD, which could lead to slight redundancy if no unique behavior is added.",
+          "suggestion": "Consider clarifying the specific responsibilities or unique behaviors that `Motorcycle`, `Car`, and `Truck` subclasses would implement beyond what the `VehicleType` enum already provides. If no specific behavior is needed, the enum might suffice, or the subclasses could override methods like `canFit` if `ParkingSpot`'s logic were more generic.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 5,
+          "evidence": "The design exhibits high cohesion within classes (e.g., `ParkingSpot` methods all relate to managing a single spot) and low coupling between them. The `ParkingLot` is coupled to the `FeeCalculator` interface, not its concrete implementations, demonstrating good separation of concerns. `ParkingLot` delegates spot finding to `ParkingFloor`, which further delegates to `ParkingSpot`, minimizing direct dependencies.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 5,
+          "evidence": "Encapsulation is well-applied, with classes like `ParkingSpot` and `Ticket` managing their internal state (e.g., `current vehicle`, `closed status`) through well-defined methods. The explicit definition and use of the `FeeCalculator` interface, with concrete implementations, is an excellent example of using interfaces to abstract behavior and promote loose coupling.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 5,
+          "evidence": "The learner correctly identifies and applies the Strategy Pattern for fee calculation, which is an ideal solution for the requirement of replaceable and extensible fee policies. This demonstrates a strong understanding of how to use design patterns to solve specific design problems effectively. The `Vehicle` hierarchy and the `ParkingLot`/`ParkingFloor`/`ParkingSpot` structure also show appropriate levels of abstraction.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design is highly extensible. The Strategy Pattern for `FeeCalculator` ensures that new fee policies can be added by simply creating new implementations without modifying existing parking logic. The design also supports adding new vehicle types (by extending `Vehicle` and updating `VehicleType`) and new parking floors (by adding `ParkingFloor` objects) with minimal impact.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 5,
+          "evidence": "The learner identifies a comprehensive list of six relevant edge cases (e.g., parking lot full, wrong vehicle type, ticket already closed) and suggests appropriate handling. For testability, the submission explains how individual classes can be unit tested and how a 'fake FeeCalculator' can be used during `ParkingLot` testing, demonstrating an understanding of dependency injection for isolated testing.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally clear, well-structured, and concise. It uses clear headings, provides detailed explanations for domain classes, relationships, and behavior flow. The explanation of the Strategy Pattern, its benefits, trade-offs, and adherence to the Open/Closed Principle is particularly strong and demonstrates a deep understanding of the design choices.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "9064fb0c-bcec-440e-8abc-12267831f715",
+    "idempotencyKey": "ff57f2aa-23da-466c-a2f6-b917ef53979f",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:15:56.581Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 38,
+      "maxScore": 40,
+      "percentage": 95,
+      "summary": "The learner has provided a comprehensive and well-structured low-level design for the Parking Lot problem. All requirements are clearly understood and addressed. The use of the Strategy Pattern for fee calculation is a strong point, directly fulfilling the extensibility requirements. Class responsibilities are well-defined, and the design demonstrates good separation of concerns, leading to high cohesion and low coupling. Edge cases and testability considerations are also well-articulated. The explanation quality is excellent, making the design easy to follow and understand.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The learner accurately listed all requirements from the problem statement and added reasonable assumptions (e.g., one vehicle one ticket, payment out of scope) that clarify the design's boundaries.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 5,
+          "evidence": "Classes like `ParkingLot`, `ParkingFloor`, `ParkingSpot`, `Ticket`, and `FeeCalculator` have clear, focused responsibilities. For example, `ParkingSpot` handles its own availability and vehicle fitting, while `ParkingLot` orchestrates the overall parking and exit flow.",
+          "concern": "The `Vehicle` subclasses (Motorcycle, Car, Truck) are listed but don't seem to add specific polymorphic behavior based on the current design description, as `ParkingSpot` uses 'supported vehicle types' which likely refers to the `VehicleType` enum.",
+          "suggestion": "Consider if the `Vehicle` subclasses are strictly necessary or if the `VehicleType` enum is sufficient for all current requirements. If subclasses are intended for future polymorphic behavior, it could be briefly mentioned.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 5,
+          "evidence": "The design exhibits high cohesion within classes (e.g., `Ticket` manages its own state changes like `close()`) and low coupling between components. The `ParkingLot` is decoupled from concrete `FeeCalculator` implementations through an interface, demonstrating good design principles.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 4,
+          "evidence": "The `FeeCalculator` interface provides a clear contract for fee calculation. `ParkingSpot` methods (`isAvailable`, `canFit`, `park`, `free`) encapsulate its internal state changes. The `Ticket.close()` method also encapsulates the logic for closing a ticket.",
+          "concern": "While implied, the submission doesn't explicitly state that class attributes would be private and accessed via public methods, which is a fundamental aspect of encapsulation.",
+          "suggestion": "Explicitly mention the use of private attributes and public methods/getters/setters to reinforce encapsulation principles in the class definitions.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 4,
+          "evidence": "The Strategy Pattern is correctly identified and applied for `FeeCalculator`, effectively addressing the requirement for replaceable and extensible fee policies. The hierarchical structure of `ParkingLot` -> `ParkingFloor` -> `ParkingSpot` is also a suitable abstraction.",
+          "concern": "The `Vehicle` class hierarchy with `Motorcycle`, `Car`, `Truck` subclasses might be an over-abstraction for the current requirements, as the `ParkingSpot`'s `supported vehicle types` (likely using the `VehicleType` enum) seems to handle the core compatibility logic.",
+          "suggestion": "Clarify the specific polymorphic behavior intended for the `Vehicle` subclasses, or consider if the `VehicleType` enum alone is sufficient for the current problem scope.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design explicitly leverages the Strategy Pattern for fee calculation, making it very easy to add new fee policies without modifying existing parking logic, directly fulfilling requirement 5. Adding new vehicle types or parking floors also appears straightforward.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 5,
+          "evidence": "The learner identified several critical edge cases (e.g., parking lot full, wrong vehicle type, ticket already closed, vehicle already parked) and outlined how the design would handle them. The discussion on testability correctly highlights independent class testing and the use of 'fake' `FeeCalculator` for `ParkingLot` testing.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally well-organized with clear headings, detailed descriptions of classes, relationships, behavior flow, edge cases, and design patterns. The language is concise and easy to understand, making the design very clear.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "b0935d93-9c53-4408-bb9f-6c94049c537d",
+    "idempotencyKey": "b5522aa7-9b0c-45f3-88f9-00f10664c67f",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:16:31.795Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 39,
+      "maxScore": 40,
+      "percentage": 98,
+      "summary": "The learner has provided an excellent low-level design for the parking lot problem. All requirements are clearly understood and addressed. The design demonstrates strong principles of object-oriented design, including clear class responsibilities, low coupling, high cohesion, and effective use of encapsulation and interfaces. The Strategy pattern is correctly applied for fee calculation, ensuring high extensibility for new fee policies. The explanation is comprehensive, well-structured, and clearly articulates design choices, benefits, and trade-offs. Most edge cases are considered, and the design is inherently testable.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The learner explicitly lists all given requirements and adds relevant implicit ones like 'assign it a compatible available spot' and 'Free the parking spot'. Assumptions are clearly stated and reasonable, demonstrating a thorough grasp of the problem scope.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 5,
+          "evidence": "Classes like 'ParkingSpot', 'ParkingFloor', 'ParkingLot', 'Ticket', and 'FeeCalculator' each have well-defined, focused responsibilities. For example, 'ParkingSpot' manages its own state and compatibility, while 'ParkingFloor' handles spot finding within its domain, and 'ParkingLot' orchestrates the overall parking flow.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 5,
+          "evidence": "The design exhibits high cohesion, with each class having a single, clear purpose. Coupling is low, particularly with the 'FeeCalculator' interface, which allows 'ParkingLot' to depend on an abstraction rather than concrete implementations. This separation ensures changes in fee logic do not impact the core parking flow.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 5,
+          "evidence": "The 'FeeCalculator' is defined as an interface, promoting loose coupling. 'ParkingSpot' methods like 'isAvailable()', 'canFit()', 'park()', and 'free()' encapsulate its internal state and logic. 'Ticket.close()' provides a controlled way to modify ticket status. The 'ParkingLot' methods 'parkVehicle()' and 'exitVehicle()' offer clear public interfaces to the system.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 5,
+          "evidence": "The learner correctly identifies and applies the Strategy Pattern for fee calculation, which directly addresses the requirement for replaceable and extensible fee policies. The use of a 'Vehicle' base class (implied by 'Vehicle classes') and the 'FeeCalculator' interface are appropriate abstractions.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design is highly extensible. Adding new vehicle types would involve creating new 'Vehicle' subclasses and updating 'ParkingSpot' compatibility. New fee policies can be added effortlessly by implementing the 'FeeCalculator' interface, without modifying existing 'ParkingLot' logic, as explicitly demonstrated with 'HolidayFeeCalculator'.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 4,
+          "evidence": "Several critical edge cases are identified and addressed, such as a full parking lot, wrong vehicle type, and already closed tickets. The design's modularity supports good testability, with the learner explicitly mentioning independent testing of classes and using a 'fake FeeCalculator' for 'ParkingLot' testing.",
+          "concern": "While 'One vehicle can have only one active ticket' is stated as an assumption, the design doesn't explicitly show how the 'ParkingLot.parkVehicle' method would enforce this constraint (e.g., by checking for existing active tickets for the vehicle).",
+          "suggestion": "Consider adding a check within the 'ParkingLot.parkVehicle' method to ensure a vehicle doesn't already have an active ticket before creating a new one, explicitly enforcing the stated assumption.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally well-structured, covering all aspects from requirements to trade-offs. The explanations are clear, concise, and directly supported by the design. The use of text-based diagrams for relationships and the detailed explanation of the Strategy pattern, its benefits, and trade-offs significantly enhance clarity.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "5240cde3-4f9f-42c6-869b-b7639fa6782c",
+    "idempotencyKey": "c80a5a3c-d628-444a-bf30-dcc0c993d60b",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:19:28.369Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 36,
+      "maxScore": 40,
+      "percentage": 90,
+      "summary": "The learner has provided a solid low-level design for the parking lot problem. All core requirements are addressed, and the design demonstrates a good understanding of object-oriented principles, especially with the application of the Strategy Pattern for fee calculation. The explanation is clear, well-structured, and covers important aspects like edge cases and testability. Minor ambiguities exist in the class hierarchy and a specific edge case handling could be more explicit.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The learner explicitly lists all requirements from the problem statement and adds relevant, reasonable assumptions. The design clearly addresses all stated requirements, including multiple floors, vehicle types, spot allocation, ticket management, and the crucial aspect of replaceable and extensible fee calculation.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 4,
+          "evidence": "Class responsibilities are generally well-defined: ParkingLot orchestrates entry/exit, ParkingFloor finds spots, ParkingSpot manages its state and vehicle, Ticket manages its lifecycle, and FeeCalculator handles fee logic. This separation of concerns is appropriate.",
+          "concern": "The relationship between the 'Vehicle' class (as a base/abstract class), its subclasses (Motorcycle, Car, Truck), and the 'VehicleType' enum is slightly ambiguous. If 'Vehicle' has a 'vehicleType' field, and subclasses exist, it could be redundant or needs clarification on how they interact. Additionally, the type of 'ParkingSpot.supported vehicle types' is not explicitly defined (e.g., List<VehicleType>).",
+          "suggestion": "Clarify the Vehicle class hierarchy; consider making 'Vehicle' an abstract class with a 'getVehicleType()' method implemented by subclasses, potentially removing the 'vehicleType' field from the base class. For 'ParkingSpot', explicitly define the type of 'supported vehicle types' as a collection like 'Set<VehicleType>'.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 4,
+          "evidence": "The design exhibits good cohesion within classes (e.g., ParkingSpot manages its own state, Ticket manages its lifecycle). Coupling between classes is appropriate; for instance, ParkingLot is coupled to ParkingFloor and FeeCalculator (via an interface), which is a reasonable level of dependency for orchestration.",
+          "concern": "While acceptable for this problem scope, the 'ParkingLot.parkVehicle(vehicle)' method's responsibility to search across all floors for a compatible spot implies a direct iteration over floors. For more complex search strategies, this could potentially increase the coupling of ParkingLot to the internal structure of floors.",
+          "suggestion": "None significant. The current level of coupling and cohesion is appropriate for the problem's scope.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 4,
+          "evidence": "The use of a 'FeeCalculator' interface (implied by 'Implementations') demonstrates good encapsulation of fee calculation logic, allowing for interchangeable strategies. ParkingSpot's methods ('isAvailable', 'canFit', 'park', 'free') effectively encapsulate its internal state and behavior.",
+          "concern": "The design does not explicitly define interfaces for core components like ParkingLot, ParkingFloor, or ParkingSpot. While not strictly required by the problem, defining interfaces for these key components could further enhance flexibility, testability, and allow for alternative implementations if needed in the future.",
+          "suggestion": "Consider defining interfaces for core components such as ParkingLot, ParkingFloor, and ParkingSpot to further improve flexibility and testability, especially if alternative implementations or more rigorous mocking are anticipated.",
+          "confidence": 0.8
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 5,
+          "evidence": "The learner correctly identifies and applies the Strategy Pattern for fee calculation, which directly addresses the requirement for replaceable and extensible fee policies. The implied use of polymorphism with a 'Vehicle' base class and specific vehicle subclasses (Motorcycle, Car, Truck) is also an appropriate abstraction for handling different vehicle types.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design is highly extensible. Adding new vehicle types is straightforward by creating new Vehicle subclasses. Adding new fee policies is explicitly made easy through the Strategy Pattern, which correctly adheres to the Open/Closed Principle. The separation of parking logic and fee logic further enhances extensibility.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 4,
+          "evidence": "Several relevant edge cases are identified, such as a full parking lot, wrong vehicle type, occupied spots, and already closed tickets. The discussion on testability is good, highlighting independent class testing and the use of a 'fake FeeCalculator' for ParkingLot testing, demonstrating an understanding of dependency injection.",
+          "concern": "The edge case 'Vehicle is already parked' (preventing multiple active tickets for the same vehicle) is identified, but the design's 'ENTRY LOGIC' does not explicitly detail how 'ParkingLot.parkVehicle' would enforce this. It would require the ParkingLot to query for existing active tickets for the incoming vehicle.",
+          "suggestion": "Detail how 'ParkingLot.parkVehicle' would check for and prevent a vehicle from having multiple active tickets. This might involve the ParkingLot maintaining a registry of active tickets or having a method to query for a vehicle's active ticket status.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally well-structured and clear. It uses distinct sections for requirements, domain classes, relationships, behavior, edge cases, and extensibility. The explanations are concise, easy to follow, and effectively communicate the design choices, including the rationale for using the Strategy Pattern and its benefits.",
+          "concern": "None.",
+          "suggestion": "None.",
+          "confidence": 1
+        }
+      ]
+    }
+  },
+  {
+    "id": "6d448587-e205-43cb-bc38-36d9905c8cd2",
+    "idempotencyKey": "f99b860d-537e-4cb6-8efc-8ee6882eb564",
+    "problemId": "parking-lot",
+    "problemTitle": "Parking Lot",
+    "submission": {
+      "requirements": "1. REQUIREMENTS & ASSUMPTIONS\n\nRequirements:\n\n* Support multiple parking floors.\n* Support three vehicle types:\n\n  * Motorcycle\n  * Car\n  * Truck\n* Parking spots can support specific vehicle types.\n* When a vehicle enters, assign it a compatible available spot.\n* Generate a parking ticket when the vehicle enters.\n* When a vehicle exits, close the ticket.\n* Calculate the parking fee at exit.\n* Free the parking spot after the vehicle exits.\n* Fee calculation should be replaceable.\n* New fee policies should be easy to add.\n\nAssumptions:\n\n* One vehicle can have only one active ticket.\n* One parking spot can contain only one vehicle.\n* A vehicle can park only in a compatible spot.\n* Payment processing is outside the scope of this design.",
+      "assumptions": "5. EDGE CASES & TESTABILITY\n\nEDGE CASES:\n\n1. Parking lot is full.\n\n   * No compatible spot is available.\n   * Return \"No available parking spot\".\n\n2. Wrong vehicle type.\n\n   * Vehicle cannot park in an incompatible spot.\n\n3. Parking spot is already occupied.\n\n   * Do not allow another vehicle to park there.\n\n4. Ticket is already closed.\n\n   * Do not allow the ticket to be closed again.\n\n5. Vehicle is already parked.\n\n   * Do not allow the same vehicle to have multiple active tickets.\n\n6. No compatible spot exists.\n\n   * Reject the vehicle even if other types of spots are empty.\n\nTESTABILITY:\n\n* Each class can be tested independently.\n* ParkingSpot can be tested for availability and vehicle compatibility.\n* Ticket can be tested for opening and closing.\n* FeeCalculator can be tested separately.\n* A fake FeeCalculator can be used during ParkingLot testing.\n* This makes the system easier to unit test.",
+      "classes": "2. DOMAIN CLASSES\n\nVehicle:\n\n* licenseNumber\n* vehicleType\n\nVehicleType:\n\n* MOTORCYCLE\n* CAR\n* TRUCK\n\nVehicle classes:\n\n* Motorcycle\n* Car\n* Truck\n\nParkingSpot:\n\n* id\n* supported vehicle types\n* current vehicle\n\nMethods:\n\n* isAvailable()\n* canFit(vehicle)\n* park(vehicle)\n* free()\n\nParkingFloor:\n\n* id\n* list of parking spots\n\nMethods:\n\n* findAvailableSpot(vehicle)\n\nParkingLot:\n\n* list of floors\n* fee calculator\n\nMethods:\n\n* parkVehicle(vehicle)\n* exitVehicle(ticket)\n\nTicket:\n\n* id\n* vehicle\n* parking spot\n* entry time\n* exit time\n* closed status\n\nMethods:\n\n* close()\n\nFeeCalculator:\n\n* calculateFee(ticket)\n\nImplementations:\n\n* HourlyFeeCalculator\n* FlatFeeCalculator\n* WeekendFeeCalculator",
+      "relationships": "3. RELATIONSHIPS\n\nParkingLot\n|\n| has many\n↓\nParkingFloor\n|\n| has many\n↓\nParkingSpot\n|\n| contains\n↓\nVehicle\n\nVehicle\n|\n+-- Motorcycle\n+-- Car\n+-- Truck\n\nVehicle\n|\n| gets\n↓\nTicket\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nMain relationships:\n\n* ParkingLot contains multiple ParkingFloors.\n* ParkingFloor contains multiple ParkingSpots.\n* ParkingSpot can contain one Vehicle.\n* Vehicle can be Motorcycle, Car or Truck.\n* A Vehicle gets a Ticket when it enters.\n* ParkingLot uses FeeCalculator to calculate the fee.",
+      "behavior": "4. BEHAVIOUR & FLOW\n\nVEHICLE ENTRY:\n\nVehicle arrives\n↓\nParkingLot searches floors\n↓\nFind compatible available spot\n↓\nPark vehicle\n↓\nCreate ticket\n↓\nReturn ticket\n\nVEHICLE EXIT:\n\nVehicle presents ticket\n↓\nCheck ticket is active\n↓\nClose ticket\n↓\nCalculate parking fee\n↓\nFree parking spot\n↓\nVehicle exits\n\nENTRY LOGIC:\n\n1. Receive the vehicle.\n2. Search all parking floors.\n3. Find an available spot compatible with the vehicle.\n4. Park the vehicle in that spot.\n5. Create a ticket.\n6. Return the ticket.\n\nEXIT LOGIC:\n\n1. Receive the ticket.\n2. Check that the ticket is not already closed.\n3. Close the ticket and record exit time.\n4. Calculate the fee using FeeCalculator.\n5. Free the parking spot.\n6. Return the calculated fee.",
+      "tradeoffs": "6. TRADE-OFFS & EXTENSIBILITY\n\nSTRATEGY PATTERN:\n\nUse the Strategy Pattern for fee calculation.\n\nFeeCalculator\n|\n+-- HourlyFeeCalculator\n+-- FlatFeeCalculator\n+-- WeekendFeeCalculator\n\nWhy use it?\n\n* Fee calculation can be changed easily.\n* ParkingLot does not need to know the pricing logic.\n* New fee policies can be added without changing existing parking logic.\n\nExample:\n\nIf we need a HolidayFeeCalculator:\n\nHolidayFeeCalculator implements FeeCalculator\n\nWe simply add the new class.\n\nWe do not need to modify ParkingLot.\n\nBENEFITS:\n\n* Easy to add new vehicle types.\n* Easy to add new fee policies.\n* Parking logic and fee logic are separated.\n* Easy to test.\n* Follows the Open/Closed Principle.\n* Flexible and maintainable.\n\nTRADE-OFFS:\n\n* More classes and interfaces are required.\n* Slightly more complex than a simple implementation.\n* For a very small parking lot, this can be considered slightly over-engineered.\n\nDESIGN PATTERN:\n\nStrategy Pattern\n\nDESIGN PRINCIPLE:\n\nOpen/Closed Principle\n\nThe system is open for adding new fee policies but closed for modifying the existing parking flow."
+    },
+    "createdAt": "2026-09-11T18:21:21.574Z",
+    "status": "COMPLETED",
+    "evaluation": {
+      "type": "gemini-rubric-v1",
+      "model": "gemini-2.5-flash",
+      "totalScore": 38,
+      "maxScore": 40,
+      "percentage": 95,
+      "summary": "The learner has provided a well-structured and comprehensive low-level design for the parking lot problem. They demonstrated a strong understanding of the requirements, including the need for replaceable and extensible fee calculation, which was effectively addressed using the Strategy Pattern. The class responsibilities are generally well-defined, and the design exhibits good cohesion and low coupling, especially regarding the fee calculation logic. Edge cases and testability considerations were thoroughly covered. The explanation quality is excellent, making the design easy to understand and evaluate.",
+      "criteria": [
+        {
+          "criterion": "Requirement understanding",
+          "score": 5,
+          "evidence": "The 'Requirements & assumptions' section accurately captures all problem requirements and adds reasonable, clarifying assumptions. The design elements like ParkingFloor, VehicleType, ParkingSpot::canFit, Ticket, and the FeeCalculator interface directly address the stated requirements.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Class responsibilities",
+          "score": 4,
+          "evidence": "Classes like ParkingSpot, ParkingFloor, ParkingLot, Ticket, and FeeCalculator have well-defined and appropriate responsibilities, as evidenced by their listed attributes and methods. ParkingLot acts as a central orchestrator, delegating specific tasks like spot finding to ParkingFloor and fee calculation to FeeCalculator.",
+          "concern": "The 'Vehicle classes' (Motorcycle, Car, Truck) are mentioned as subclasses of Vehicle, but their specific responsibilities or distinct behaviors beyond their vehicleType are not detailed. If no type-specific behavior is required, a single Vehicle class with a VehicleType enum might suffice, making the subclasses potentially redundant in the current context.",
+          "suggestion": "Clarify if Motorcycle, Car, and Truck classes have distinct behaviors or attributes that necessitate them being separate classes, or if a single Vehicle class with a VehicleType enum would be sufficient for the current requirements.",
+          "confidence": 0.9
+        },
+        {
+          "criterion": "Coupling / cohesion",
+          "score": 5,
+          "evidence": "The design demonstrates good cohesion within classes (e.g., ParkingSpot manages its own state and operations). Coupling is kept low, particularly between ParkingLot and the fee calculation logic, due to the use of the FeeCalculator interface (Strategy Pattern). Relationships are logical and necessary for the system's functionality.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Encapsulation and interfaces",
+          "score": 4,
+          "evidence": "Key classes like ParkingSpot and Ticket effectively encapsulate their internal state, with methods controlling access and modification. The FeeCalculator is clearly defined as an interface, enabling loose coupling and extensibility.",
+          "concern": "While the FeeCalculator interface is well-defined, no other explicit interfaces are presented (e.g., for Vehicle or ParkingSpot). Although the Vehicle hierarchy implies polymorphism, an explicit IVehicle interface or abstract class could further enhance flexibility and clarify polymorphic behavior if different vehicle types were to have distinct methods beyond just their type.",
+          "suggestion": "Consider defining explicit interfaces for key domain entities like Vehicle if future requirements might introduce diverse behaviors that would benefit from polymorphism through an interface.",
+          "confidence": 0.8
+        },
+        {
+          "criterion": "Appropriate abstraction / patterns",
+          "score": 5,
+          "evidence": "The learner correctly identified and applied the Strategy Pattern for fee calculation, which directly addresses the requirements for replaceable and extensible fee policies. This is clearly explained in the 'Trade-offs & extensibility' section. Other abstractions like Vehicle, ParkingSpot, and ParkingFloor are also appropriate for the problem domain.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Extensibility",
+          "score": 5,
+          "evidence": "The design excels in extensibility, particularly for fee calculation, due to the Strategy Pattern. Adding new fee policies is straightforward, requiring only a new implementation of FeeCalculator without modifying existing core logic. The design also supports adding new vehicle types and parking floors easily.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Edge cases and testability",
+          "score": 5,
+          "evidence": "The 'Edge cases & testability' section lists a comprehensive set of relevant edge cases (e.g., parking lot full, wrong vehicle type, ticket already closed). The design's testability is explicitly addressed, highlighting independent class testing and the use of a 'fake FeeCalculator' for ParkingLot testing, which is a strong indicator of a testable design.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        },
+        {
+          "criterion": "Quality of explanation",
+          "score": 5,
+          "evidence": "The submission is exceptionally well-organized with clear headings, concise language, and effective use of text-based diagrams for relationships and patterns. The explanation of the Strategy Pattern, behavior flows, and rationale for design choices is clear, detailed, and easy to follow.",
+          "concern": "",
+          "suggestion": "",
+          "confidence": 1
+        }
+      ]
+    }
   }
 ]

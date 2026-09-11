@@ -36,11 +36,26 @@ $("#attemptForm").onsubmit=async e=>{
   }catch(err){$("#formError").textContent=err.message}
 };
 async function poll(id){
-  for(let i=0;i<12;i++){
-    await new Promise(r=>setTimeout(r,400));
-    const a=await api("/api/attempts/"+id); $("#statusPill").textContent=a.status;
-    if(a.status==="COMPLETED"||a.status==="FAILED"){renderFeedback(a); return;}
+  for(let i=0;i<60;i++){
+    try {
+      const a=await api("/api/attempts/"+id);
+      $("#statusPill").textContent=a.status;
+
+      if(a.status==="COMPLETED" || a.status==="FAILED"){
+        renderFeedback(a);
+        return;
+      }
+    } catch(err) {
+      console.error("Polling failed:", err);
+    }
+
+    await new Promise(r=>setTimeout(r,1000));
   }
+
+  $("#feedback").innerHTML=`
+    <h3>Evaluation is taking longer than expected</h3>
+    <p>Your submission is safely saved. Please refresh or check History shortly.</p>
+  `;
 }
 function renderFeedback(a){
   const e=a.evaluation;
